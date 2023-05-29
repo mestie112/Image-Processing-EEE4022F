@@ -1,0 +1,56 @@
+clc;        % Clear the command window.
+close all;  % Close all figures (except those of imtool.)
+clear;      % Erase all existing variables.
+
+
+%% Reading image in
+
+I = imread('Ice1.jpg');
+I = im2gray(I);
+I = padarray(I,[1 1],0,'both');
+bw = imbinarize(I);
+%Icrop = imcrop(bw);
+
+
+inp = 2;
+iterations = 100;
+rc = 30;
+rd = 3;
+
+imshow(I);
+coor = ginput(inp);
+floe = 0;
+
+for i = 1:inp
+  %  roi = drawassisted();
+    roi = drawcircle("Center",coor(i,1:2),'Radius',rc);
+    mask = createMask(roi);
+    % Active contour
+    BW = activecontour(I, mask, iterations, 'Chan-vese');
+    floe = floe + BW;
+end
+
+cls = figure;
+se = strel('disk',rd);
+floe = imdilate(floe,se,'notpacked');
+imshow(floe);
+
+%dil = imfill(edge(floe,"canny"),'holes');
+imshowpair(I,floe)
+
+%}
+
+
+stats = regionprops(floe, 'Area','Centroid','EquivDiameter');
+diam = stats.EquivDiameter/1.5;
+cent = stats.Centroid;
+
+roi = drawcircle("Center",sta,'Radius',stats.EquivDiameter/1.5);
+mask = createMask(roi);
+
+% Active contour
+BW1 = activecontour(I, mask, 1000, 'Chan-vese');
+se = strel('disk',rd);
+floe = imdilate(floe,se,'notpacked');
+figure;
+imshowpair(I,BW1);

@@ -1,0 +1,342 @@
+clc;        % Clear the command window.
+close all;  % Close all figures (except those of imtool.)
+clear;      % Erase all existing variables.
+
+%% Reading image in
+I = imread("Ice3.jpg");
+%I = imcrop(I);     % Users have the option of only analysing a specific region of the image.
+
+%% Grayscaling Image
+ImG = im2gray(I);
+
+%% Binary Image
+Ibin = imbinarize(Im);
+
+%% Threshold Algorithms
+%{                                                        
+sen = 0.7;      % Sensitivity value of the Adaptive method.
+Im_Adap = imbinarize(ImG,"adaptive","Sensitivity",sen);     % Output of the Adaptive method.
+
+thresh = graythresh(ImG);       % OTSU thresholding value.
+Im_Otsu = imbinarize(ImG);      % Output of OTSU's method.
+
+
+%{                                                      
+thresh_figures = figure;        % Display Thresholding Figures.
+subplot('Position',[0 0 0.5 0.95]);
+imshow(Im_Otsu);
+title("OTSU Thresholding");
+
+subplot('Position',[0.5 0 0.5 0.95]);
+imshow(Im_Adap);
+title("MATLAB imbinarize Thresholding");
+%}
+
+%{
+num = numel(ImG);
+
+binary_hist = figure;                     % Display Thresholding Histograms
+subplot('Position',[0.05 0.1 0.4 0.8]);
+x = histogram(Im_Otsu);
+xticks([0 1]);
+xticklabels(["Black","White"]);
+
+E = x.BinEdges;
+y = x.BinCounts;
+a = y/num;
+tyt = y+" ("+a+"%)";
+
+xloc = E(1:end-1)+diff(E)/2;
+text([-0.2 0.7], y+15000, tyt);
+title("OTSU Thresholding");
+
+subplot('Position',[0.6 0.1 0.4 0.8]); 
+x = histogram(Im_Adap);
+xticks([0 1]);
+xticklabels(["Black","White"]);
+
+E = x.BinEdges;
+y = x.BinCounts;
+a = y/num
+tyt = y+" ("+a+"%)";
+
+xloc = E(1:end-1)+diff(E)/2;
+text([-0.2 0.7], y+15000, tyt);
+title("Adaptive Thresholding");
+%}
+
+%}
+
+%% K means algorithm
+%{
+
+K = input("Enter a K value: ");             % User input of K value
+[K_segment, Centers] = imsegkmeans(ImG,K);  % K-means Method
+K_colors = labeloverlay(I,K_segment);       % Colour Overlay of Results
+
+
+% Image Classification
+[x,y] = size(ImG);
+
+class1 = zeros(x,y);            % Empty classes to store results
+class2 = zeros(x,y);
+class3 = zeros(x,y);
+class4 = zeros(x,y);
+class5 = zeros(x,y);
+class6 = zeros(x,y);
+
+for i = 1:x
+    for j = 1:y
+        if K_segment(i,j) == 1
+            class1(i,j) = K_segment(i,j);
+        end
+
+        if K_segment(i,j) == 2
+            class2(i,j) = K_segment(i,j);
+        end
+
+        if K_segment(i,j) == 3
+            class3(i,j) = K_segment(i,j);
+        end
+
+        if K_segment(i,j) == 4
+            class4(i,j) = K_segment(i,j);
+        end
+        if K_segment(i,j) == 5
+            class5(i,j) = K_segment(i,j);
+        end
+       
+        if K_segment(i,j) == 6
+            class6(i,j) = K_segment(i,j);
+        end
+
+        j = j+1;
+    end
+    i = i+1;
+end
+
+% K Means Results
+
+%%{
+fig_classes1 = figure;                  %Display k-means classes
+subplot('Position',[0 0.2 0.33 0.5]);
+imshow(class1)
+title("class1");
+
+
+subplot('Position',[0.34 0.2 0.33 0.5]);
+imshow(class2)
+title("class2");
+
+subplot('Position',[0.68 0.2 0.33 0.5]);
+imshow(class3);
+title("class3");
+
+if K > 3
+    fig_classes2 = figure;
+    subplot('Position',[0 0.2 0.33 0.5]);
+    imshow(class4)
+    title("class4");
+
+
+    subplot('Position',[0.34 0.2 0.33 0.5]);
+    imshow(class5)
+    title("class5");
+
+    subplot('Position',[0.68 0.2 0.33 0.5]);
+    imshow(class6);
+    title("class6");
+end
+%}
+
+% Floe Image
+%{
+c = 1;
+class = zeros(K,0);                 % User chooses which classes are floes
+while c < K + 1
+    inp_c = input("Enter a class number for floe images: "); 
+    class(c) = uint8 (inp_c);
+    disp(class(c));
+    c = c+1;
+end
+
+d = 1;
+floe = zeros(x,y);
+
+
+while d < K + 1
+    if class(d) == 1
+        floe = floe + class1;
+    end
+
+    if class(d) == 2
+        floe = floe + class2;
+    end
+    
+    if class(d) == 3
+        floe = floe + class3;
+    end
+    
+    if class(d) == 4
+        floe = floe + class4;
+    end
+
+    if class(d) == 5
+        floe = floe + class5;
+    end
+
+    if class(d) == 6
+        floe = floe + class6;
+    end
+
+     if class(d) == 0
+        floe = floe;
+    end
+    d = d+1;
+end
+fig_floe = figure;
+imshow(floe);
+%}
+
+% Water Image
+
+%{                      
+c = 1;                              % User chooses which classes are water
+class = zeros(K,0);
+while c < K + 1
+    inp_c = input("Enter a class number for water images: ");
+    class(c) = uint8 (inp_c);
+    disp(class(c));
+    c = c+1;
+end
+
+d = 1;
+water = zeros(x,y);
+
+while d < K + 1
+    if class(d) == 1
+        water = water + class1;
+    end
+
+    if class(d) == 2
+        water = water + class2;
+    end
+    
+    if class(d) == 3
+        water = water + class3;
+    end
+    
+    if class(d) == 4
+        water = floe + class4;
+    end
+
+    if class(d) == 5
+        water = water + class5;
+    end
+    
+    if class(d) == 0
+        water = water;
+    end
+    d = d+1;
+end
+fig_water = figure;
+imshow(water);
+%}
+
+
+
+%imshowpair(K_colors,I);
+%{
+num = numel(ImG);
+
+binary_hist = figure;                   % K-means Histogram
+x = histogram(imbinarize(floe));
+xticks([0 1]);
+xticklabels(["Black","White"]);
+
+E = x.BinEdges;
+y = x.BinCounts;
+a = y/num;
+tyt = y+" ("+a+"%)";
+
+xloc = E(1:end-1)+diff(E)/2;
+text([-0.2 0.7], y+15000, tyt);
+title("Floe Image");
+%}
+%}
+
+%% Edge Detection Algorithm
+%{
+% Gaussian Blur
+s = 0.6;
+ImG = gaussianBlur(ImG,s);
+
+
+% Edge Detection
+edge_prewitt = edge(ImG,"prewitt");
+
+edge_sobel = edge(ImG,"sobel");
+
+edge_canny = edge(ImG,"canny");
+
+% Results
+
+% Display Results
+fig2 = figure;
+imshow(ImG);
+title("Standard Deviation = "+ s);
+
+fig = figure;
+subplot('Position',[0 0 0.3 1]);
+imshow(imfill(edge_sobel,'holes'));
+title("Sobel Edge");
+
+
+subplot('Position',[0.35 0 0.3 1]);
+imshow(imfill(edge_canny,'holes'));
+title("Canny Edge");
+
+subplot('Position',[0.7 0 0.3 1]);
+imshow(imfill(edge_prewitt,'holes'));
+title("Prewitt Edge");
+
+
+
+
+% Combining Results
+
+s1 = s;         % Setpoint standard deviation
+s2 = s + 1;
+s3 = s - 0.1;
+s4 = s + 0.5;
+s5 = s - 0.5;
+
+% Blurs performed with different standard deviations
+ImG1 = gaussianBlur(ImG,s1);        
+ImG2 = gaussianBlur(ImG,s2);
+ImG3 = gaussianBlur(ImG,s3);
+ImG4 = gaussianBlur(ImG,s4);
+ImG5 = gaussianBlur(ImG,s5);
+
+%Edge canny for images of different blurs
+
+edge_canny1 = imfill(edge(ImG1,"canny"),'holes');
+edge_canny2 = imfill(edge(ImG2,"canny"),'holes');
+edge_canny3 = imfill(edge(ImG3,"canny"),'holes');
+edge_canny4 = imfill(edge(ImG4,"canny"),'holes');
+edge_canny5 = imfill(edge(ImG5,"canny"),'holes');
+
+
+pic = edge_canny1 + edge_canny2;
+
+pic1 = pic + edge_canny3;
+
+pic2 = pic1 + edge_canny4;
+
+pic3 = pic2 + edge_canny5;
+
+
+pic4 = imfill(pic3,"holes");
+%imshow(pic4);
+%imshowpair(I,pic4,"montage")
+%}
