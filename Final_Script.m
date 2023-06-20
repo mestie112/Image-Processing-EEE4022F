@@ -1,7 +1,7 @@
 clc;        % Clear the command window.
 close all;  % Close all figures (except those of imtool.)
 clear;      % Erase all existing variables.
-
+a
 %% Reading image in
 I = imread("Ice1.jpg");
 %I = imcrop(I);     % User has the option of only analysing a specific region of the image.
